@@ -9,49 +9,56 @@
 
 - ATX Antec HCG - 620M : 150mm x 160mm x 86mm (width, depth and height)
 
+- 3 Rock5+ -> 100 x 72 mm
+
 */
 
 include <BOSL2/std.scad>
 include <BOSL2/sliders.scad>
-
+include <localcloud_cfg.scad>
 use <slash.scad>
 use <front_back_covers.scad>
 use <main_structure.scad>
 
-clearance=0.3; // global clearance
-global_thickness=5; // global thickness
 
-atx_width=150;
-atx_depth=160;
-atx_height=86;
+
+/* ATX Power supply dimenssions. TODO: replace with  selectable standar PSU sizes */
+atx_dimensions=[150,160,86];
+
+/* Power splitter from ATX to 8 molex ports */
+ps_dimensions=[90,90,17];
 
 back_cover_screw_holders_width=15;
 back_cover_screw_diameter=4;  
 
-base_width=atx_width + clearance*2 + back_cover_screw_holders_width*2;  
-base_height=atx_height  + clearance*2 + 178 + 50; // altura de la fuente ATX + Altura torre + clearance para cables y placas adicionales, como le distribuidor de potencia. 
-base_depth= atx_depth + 50; // profundidad dede la fuente + 50mm de espacio para pasar cables
+//af == acrylic frame
+af_dimensions=[117,5,85];
+num_afs=8;
+inter_afs_distance=35; 
+
+base_dimensions=[atx_dimensions.x + $clearance*2 + back_cover_screw_holders_width*2,
+                atx_dimensions.y + 50,
+                atx_dimensions.z  + $clearance*2 + inter_afs_distance*num_afs + 50];
+
  
 $fn=100;
  
 /* Of course, not to be printed */
+/* Of course, not to be printed */
 module atx_power_supply() {
-  cube([atx_width,atx_height,atx_depth], center=true);
+  cube(atx_dimensions,anchor=FRONT,    orient=FRONT);
 }
 
-
-module frame_sliders(frame_thickness=2) {
-  slider(l=30, base=10, wall=4, $slop=0.2, spin=90);
+module power_delivery(size) {
+  
 }
 
+  
+!main_structure(case_size=base_dimensions, thickness=$global_thickness, atx_size=atx_dimensions, num_acrylic_frames=num_afs, inter_acrylic_frame=inter_afs_distance, af_size=af_dimensions);
  
+ 
+ color("green") translate([0,(-base_dimensions.z/2) + atx_dimensions.z/2,115]) atx_power_supply();
 
-!difference() {
-main_structure(width=base_width, height=base_height, depth=base_depth, thickness=global_thickness, atx_height=atx_height);
-translate([0,0,base_depth]) front_cover(base_width, base_height, global_thickness);
-}
-color("green") translate([0,(-base_height/2) + atx_height/2,115]) atx_power_supply();
+%translate([0,0,base_dimensions.y+100]) color("blue") front_cover(base_dimensions.x, base_dimensions.z, $global_thickness); 
 
-translate([0,0,base_depth+100]) color("blue") front_cover(base_width, base_height, global_thickness);
-
-translate([0,0,-base_depth+100]) color("magenta") back_cover(base_width, base_height, global_thickness, back_cover_screw_diameter);
+%translate([0,0,-base_dimensions.y+100]) color("magenta") back_cover(base_dimensions.z, base_dimensions.z, $global_thickness, back_cover_screw_diameter);

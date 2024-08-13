@@ -3,36 +3,29 @@ use <slash.scad>
 
 module front_cover(width, height, cover_thickness) {
 
+cover_notch_width= width/PHI;
+cover_molding_width= cover_thickness*4; //both sides
+cover_molding_height= cover_thickness*6;
+
 union() {
- linear_extrude(height=cover_thickness) 
  
-     square([width, height], center=true);
-
-     // slahes on the cover
-    for(i=[-1:1:1]) {
-      x=-width/2 + cover_thickness; 
-      y=i*100 + 5;
-
-       slash(x, y,-90,180,0);
-       mirror([1,0,0]) slash(x, y,-90,180,0);
-    }
-
-    for(j=[-1:1:1]) {
-      x=(width*j/3) + 5; 
-      y=height/2 - 5;
-       
-      slash(x, y,-90,-90,0);
-      mirror([0,1,0]) slash(x, y,-90,-90,0);
-    }
-    
-   translate([0,0,0]) _front_cover_logo();
+    difference() {
+        cube([width, height,cover_thickness], center=true); //main cover
+        translate([0,height/2 - 20, cover_thickness]) xcyl(l=cover_notch_width, d=cover_thickness, anchor=TOP); // cover notch so the cover can be slided up easily
+    } 
+   translate([0,0,-cover_thickness]) cube([width-cover_molding_width, height-(cover_thickness*6),cover_thickness], center=true); //inner cover
+   
+   translate([width/3,-height/2+cover_thickness,-2*cover_thickness/3]) sphere(d=cover_thickness); // lower slashes
+   translate([-width/3,-height/2+cover_thickness,-2*cover_thickness/3]) sphere(d=cover_thickness);
+   translate([0,0,cover_thickness]) _front_cover_logo(width, height,cover_thickness);
   }
+ 
 }
 
-module _front_cover_logo() {
+module _front_cover_logo(width, height, cover_thickness) {
 union() {
-linear_extrude(height=20,center=true,convexity = 200) import("logo.svg", center = true, dpi = 150, $fn=50);
-translate([0,-80,0]) text3d("My Local Cloud", h=20, size=18, font="Helvetica",anchor=CENTER);
+linear_extrude(height=cover_thickness,center=true,convexity = 200) import("logo.svg", center = true, dpi = width/PHI, $fn=100);
+translate([0,-height/2/PHI,0]) text3d("My Local Cloud", h=cover_thickness, size=18, font="Helvetica",anchor=CENTER);
 }
 
 }
@@ -72,3 +65,4 @@ difference() {
   }
 }
 
+ front_cover(180, 300, 5);
