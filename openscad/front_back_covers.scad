@@ -1,5 +1,8 @@
 include <BOSL2/std.scad>
+include <utils.scad>
 use <slash.scad>
+
+//TODO: Clean code to use BOSL2 in all its glory
 
 module front_cover(width, height, cover_thickness) {
 
@@ -11,21 +14,25 @@ union() {
  
     difference() {
         cube([width, height,cover_thickness], center=true); //main cover
-        translate([0,height/2 - 20, cover_thickness]) xcyl(l=cover_notch_width, d=cover_thickness, anchor=TOP); // cover notch so the cover can be slided up easily
+        back(height/2 - 20) up(cover_thickness) 
+            xcyl(l=cover_notch_width, d=cover_thickness, anchor=TOP); // cover notch so the cover can be slided up easily
     } 
-   translate([0,0,-cover_thickness]) cube([width-cover_molding_width, height-(cover_thickness*6),cover_thickness], center=true); //inner cover
+    down(cover_thickness) 
+        cube([width-cover_molding_width, height-(cover_thickness*6),cover_thickness], center=true); //inner cover
    
    translate([width/3,-height/2+cover_thickness,-2*cover_thickness/3]) sphere(d=cover_thickness); // lower slashes
    translate([-width/3,-height/2+cover_thickness,-2*cover_thickness/3]) sphere(d=cover_thickness);
-   translate([0,0,cover_thickness]) _front_cover_logo(width, height,cover_thickness);
+    up(cover_thickness) _front_cover_logo(width, height,cover_thickness);
   }
  
 }
 
 module _front_cover_logo(width, height, cover_thickness) {
 union() {
-linear_extrude(height=cover_thickness,center=true,convexity = 200) import("logo.svg", center = true, dpi = width/PHI, $fn=100);
-translate([0,-height/2/PHI,0]) text3d("My Local Cloud", h=cover_thickness, size=18, font="Helvetica",anchor=CENTER);
+    linear_extrude(height=cover_thickness,center=true,convexity = 200) 
+        import("logo.svg", center = true, dpi = width/PHI, $fn=100);
+    fwd(height/2/PHI)
+        text3d("My Local Cloud", h=cover_thickness, size=18, font="Helvetica",anchor=CENTER);
 }
 
 }
