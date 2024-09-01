@@ -23,50 +23,65 @@
 
 include <BOSL2/std.scad>
 include <BOSL2/sliders.scad>
-include <localcloud_cfg.scad>
+include <NopSCADlib/core.scad>
+include <NopSCADlib/vitamins/fans.scad>
 use <slash.scad>
 use <front_back_covers.scad>
 use <main_structure.scad>
 use <case_splitting.scad>
+include <localcloud_cfg.scad>
 
-  
 
-case_dimensions=[$atx_size.x + $clearance*2 + $back_screws_height*2 + $global_thickness*2,
-                $atx_size.y + $inter_af_space*$num_afs + $global_thickness*2,
-                $atx_size.z  + $clearance*2 +  $global_thickness*2];
-echo("Case dimensions: w, h, d:", case_dimensions.x, case_dimensions.y, case_dimensions.z);           
-//assert($case_dimensions.x/2 - $global_thickness*2 > $power_delivery_pcb_size.x, "Power delivery PCB cannot fix!!");
+
 
 $fn=100;
  
  
 /* Of course, not to be printed */
-module atx_power_supply() {
-  cube(atx_dimensions,anchor=FRONT,    orient=FRONT);
+module atx_power_supply(size) {
+  cube(size,anchor=CENTER,orient=UP);
 }
  
 
 cut_axis="Z";
 sep_distance=40;
 
-partition(size=case_dimensions+[10,10,10], spread=sep_distance, gap=0, cutsize=1, cutpath="flat") 
-    diff("borrar")  {
-     main_structure(case_size=case_dimensions, 
-                    thickness=$global_thickness, 
-                    atx_size=$atx_size,              
-                    num_acrylic_frames=$num_afs, 
-                    inter_acrylic_frame=$inter_af_space, 
-                    af_size=$af_dimensions) {
-                    #color("green") face_mask(get_split_faces(cut_axis)) 
-                         tag("borrar") ycopies(n=$num_joiners, l=(case_dimensions.z - case_dimensions.z/5)) 
-                            half_joiner_clear(l=$joiner_lenght,w=$joiner_width, orient=RIGHT);
-                    
-                    }
-    }
- 
+ main_structure(case_size=$lc_case_dimensions, 
+                thickness=$global_thickness, 
+                atx_size=$atx_size,              
+                num_acrylic_frames=$num_afs, 
+                inter_acrylic_frame=$inter_af_space, 
+                af_size=$af_dimensions) {
+                  color("green") 
+                    back($atx_size.y + $global_thickness) 
+                        align(FWD)
+                            atx_power_supply($atx_size);
+}
+            
+back($lc_case_dimensions.y+20) 
+    up($lc_case_dimensions.z/2 + $global_thickness) color("blue") 
+        front_cover($lc_case_dimensions.x, $lc_case_dimensions.y, $global_thickness); 
 
-*color("green") translate([0,(-case_dimensions.z/2) + atx_dimensions.z/2,115]) atx_power_supply();
 
-up(case_dimensions.y+20) color("blue") front_cover(case_dimensions.x, case_dimensions.y, $global_thickness); 
 
-*translate([0,0,-case_dimensions.y+100]) color("magenta") back_cover(case_dimensions.z, case_dimensions.z, $global_thickness, back_cover_screw_diameter);
+down($lc_case_dimensions.z/2 + 50) yrot(180)
+        color("magenta") 
+            diff("back_holes")
+back_cover($lc_case_dimensions, 
+           $global_thickness,
+           $lc_main_fan_size,
+           $atx_s_p_size,
+           $atx_s_p_ps, 
+           $atx_size) {
+                 tag("back_holes")    
+                 back_cover_holes(50, 
+                                $back_screws_internal_diameter, 
+                                $back_screws_height + $global_thickness -3,
+                                $num_back_screws, 
+                                $back_screws_distrib_length - 7,
+                                $global_thickness);
+            }
+                           
+//                           !up(200) fan(fan120x25);
+                           
+  

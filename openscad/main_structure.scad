@@ -18,26 +18,38 @@ module main_structure(case_size=[1,1,1],
                     back_screws_height=$back_screws_height,
                     num_acrylic_frames=$num_afs, 
                     inter_acrylic_frame=$inter_af_space, 
+                    pd_pcb_size=$power_delivery_pcb_size,
                     af_size=$af_dimensions, anchor=CENTER, spin, orient=TOP) {
+                    
     case_min_size=[atx_size.x + thickness*2, 
                    atx_size.y + num_acrylic_frames*inter_acrylic_frame + 2*thickness,
-                   0];
-                   
+                   atx_size.z + back_screws_height + thickness*2];
+    
+    echo("Case dimensions: w, h, d:", case_size.x, case_size.y, case_size.z);           
+
+    assert(case_size.x/2 - thickness*2 >= pd_pcb_size.x, str("Power delivery PCB cannot fix!!:",case_size.x/2 - thickness*2, ">",pd_pcb_size.x));              
     assert(case_size.x >= case_min_size.x, "Case width too small");
     assert(case_size.y >= case_min_size.y, str("Case height is too short for num_acrylic_frames:", num_acrylic_frames, ". At least ",case_min_size.y, " is required but get ", case_size.y));
-   
+    assert(case_size.z >= case_min_size.z, "Case depth too small");
     
     attachable(anchor,spin,orient, size=case_size) {
         union() {
      rect_tube(h=case_size.z, size=[case_size.x, case_size.y], wall=thickness, center=true){
+       // child -1: front door sliders
+        mirror_copy(RIGHT) align(LEFT,TOP, inside=true) 
+         xrot(90) back(thickness) up(thickness) 
+         slider(l=case_size.y, w=thickness, h=thickness, base=thickness, wall=$front_slider_wall, 
+                               spin=0, 
+                               orient=RIGHT, 
+                               anchor=LEFT);
        // child 0: atx top
-       back(atx_size.y)  
-        align(TOP,FRONT,inside=true) 
-            hex_panel([case_size.x, case_size.z + $clearance*2, $global_thickness], 
+       *back(atx_size.y + $global_thickness + $clearance*2)  
+        align(CENTER,FRONT,inside=true) 
+            hex_panel([case_size.x, case_size.z - 4*$global_thickness, $global_thickness], 
                     strut=1.5, 
                     spacing=10, 
                     orient=BACK, 
-                    anchor=BACK) {
+                    anchor=CENTER) {
                       left($power_delivery_pcb_size.x/2) 
                         align(TOP,CENTER)  
                             _usb_power_delivery(size=$power_delivery_pcb_size);
@@ -45,7 +57,7 @@ module main_structure(case_size=[1,1,1],
                     
          // child 1: back screws
          mirror_copy(RIGHT) align(LEFT,BOT,inside=true)  
-            ycopies(n=num_back_screws, l=case_size.y-case_size.y/num_back_screws)
+            ycopies(n=num_back_screws, l=$back_screws_distrib_length)
                 up(thickness) 
                     right(back_screws_height) 
                         zrot(-90) 
@@ -58,7 +70,7 @@ module main_structure(case_size=[1,1,1],
             slider_l = _get_af_slider_size(af_size) [0];
             slider_w = _get_af_slider_size(af_size) [1];
             slider_h = _get_af_slider_size(af_size) [2];
-            xflip_copy(RIGHT, -case_size.x/4) 
+           * xflip_copy(RIGHT, -case_size.x/4) 
                 back(atx_size.y*2) align(LEFT,FWD,inside=true) 
                     ycopies(n=num_acrylic_frames, spacing=inter_acrylic_frame)
                         slider(l=slider_l, w=slider_w, h=slider_h, base=thickness, wall=thickness, 
@@ -69,13 +81,14 @@ module main_structure(case_size=[1,1,1],
            sw_w=thickness*1.5;
            sw_h=case_size.y-atx_size.y-thickness*2;
            sw_d=case_size.z-thickness*2;
-           align(CENTER,BACK)color("brown") sparse_cuboid(size=[sw_w,sw_h,sw_d], strut=1);            
+           *align(CENTER,BACK)color("brown") sparse_cuboid(size=[sw_w,sw_h,sw_d], strut=1);            
            //child 5: ATX guides
            mirror_copy(RIGHT) 
                left(atx_size.x/2 + $clearance + thickness/2)
                    back(thickness) 
                     align(FWD,CENTER, inside=true) 
-                        color("brown") cube([thickness, thickness, case_size.z - 2*thickness],anchor=CENTER);
+                        color("brown") 
+                            cube([thickness, thickness, case_size.z - 2*thickness],anchor=CENTER);
                
       }
             

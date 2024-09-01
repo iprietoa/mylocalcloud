@@ -9,8 +9,12 @@ include <NopSCADlib/printed/fan_guard.scad>
 include <BOSL2/joiners.scad>
 include <case_splitting.scad>
 include <utils.scad>
-include <main_structure.scad>
+use <main_structure.scad>
 
+ slider(l=50, w=5, h=5, base=5, ang=15, wall=2.5,                              
+                               orient=RIGHT, 
+                               spin=90,
+                               anchor=LEFT);
 *fan(fan120x25);
 *scale([1.36,1.36,1.36]) psu(ATX300);
 *fan_guard(type=fan120x25,  thickness = fan_guard_thickness(), spokes = 4, finger_width = 7, grill = false, screws = true);
@@ -35,7 +39,7 @@ num_case_joiners=3;
 joiner_screw_size=3;
 $fn=100;
 
- _af_sliders_and_wall(case_size=base_dimensions, af_size=af_size, atx_size=atx_size, num_afs=1, inter_af_length=1, thickness=5 );
+ *_af_sliders_and_wall(case_size=base_dimensions, af_size=af_size, atx_size=atx_size, num_afs=1, inter_af_length=1, thickness=5 );
 
 module split_case(case_dimensions,num_joiners=3, spread=20) {
     cut_axis="Z";
